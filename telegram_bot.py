@@ -2,71 +2,63 @@ import time
 import telebot
 
 from selenium import webdriver
+from selenium.common.exceptions import TimeoutException
 from selenium.webdriver.chrome.service import Service as ChromeService
 from webdriver_manager.chrome import ChromeDriverManager
 
-from startParser import start_parser
+import new_news_checker
+from parsers.parser_3dnews import get_3dnews_news
+from parsers.parser_cnews import get_cnews_news
+from parsers.parser_habr import get_habr_news
+from parsers.parser_tproger import get_tproger_news
+from strings import urls, keys
 
-token = "5225839118:AAEh98hX3MpquwzmXbSlc8GbwQeN4ZqQhZI"
-channel = "@le0news"
+token = keys.BOT_TOKEN
+channel = keys.BOT_CHANNEL
 bot = telebot.TeleBot(token)
 
-a=True
 
 @bot.message_handler(commands=["start"])
 def start(message):
     service = ChromeService(executable_path=ChromeDriverManager().install())
     driver = webdriver.Chrome(service=service)
 
-    last_habr_post_id = None
-    last_tproger_post_id = None
-    last_cnews_post_url = None
-    last_3dnews_post_id = None
-
     while True:
-        # В pycharm-е оказывается нет регионов :(
-        news = start_parser(driver)
 
-        # region Habr
-        post = news.get("habr")
-        if last_habr_post_id != post.get("id"):
-            title = post.get("title")
-            description = post.get("description")
-            url = post.get("url")
-            bot.send_message(channel, f"{title}\n\n{description}\n{url}")
-        last_habr_post_id = post.get("id")
-        # endregion
+        try:
+            driver.get(urls.URL_habr)
+            habr = get_habr_news(driver)
+            if new_news_checker.check_if_new("habr", habr.url):
+                bot.send_message(channel, habr.as_telegram_message())
+        except:  # тут не стал указывать исключения, слишком много всего может выпасть
+            print("habr упал")
 
-        # region Tproger
-        post = news.get("tproger")
-        if last_tproger_post_id != post.get("id"):
-            title = post.get("title")
-            description = post.get("description")
-            url = post.get("url")
-            bot.send_message(channel, f"{title}\n\n{description}\n{url}")
-        last_tproger_post_id = post.get("id")
-        # endregion
+        try:
+            driver.get(urls.URL_tproger)
+            tproger = get_tproger_news(driver)
+            if new_news_checker.check_if_new("tproger", tproger.url):
+                bot.send_message(channel, tproger.as_telegram_message())
+        except:
+            print("tproger упал")
 
-        # region Cnews
-        post = news.get("cnews")
-        if last_cnews_post_url != post.get("url"):
-            title = post.get("title")
-            url = post.get("url")
-            bot.send_message(channel, f"{title}\n\n{url}")
-        last_cnews_post_url = post.get("url")
-        # endregion
+        try:
+            driver.get(urls.URL_cnews)
+            cnews = get_cnews_news(driver)
+            if new_news_checker.check_if_new("cnews", cnews.url):
+                bot.send_message(channel, cnews.as_telegram_message())
+        except:
+            print("cnews упал")
 
-        # region 3dnews
-        post = news.get("3dnews")
-        if last_3dnews_post_id != post.get("id"):
-            title = post.get("title")
-            description = post.get("description")
-            url = post.get("url")
-            bot.send_message(channel, f"{title}\n\n{description}\n{url}")
-        last_3dnews_post_id = post.get("id")
-        # endregion
+        try:
+            driver.get(urls.URL_3dnews)
+            news3d = get_3dnews_news(driver)
+            if new_news_checker.check_if_new("3dnews", news3d.url):
+                bot.send_message(channel, news3d.as_telegram_message())
+        except:
+            print("3dnews упал")
 
         time.sleep(30)
 
 
-bot.polling()
+if __name__ == '__main__':
+    bot.polling()

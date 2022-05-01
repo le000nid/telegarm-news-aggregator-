@@ -1,19 +1,18 @@
+from selenium.common.exceptions import TimeoutException
 from selenium.webdriver.common.by import By
+
+from models.telegram_post import TelegramPost
+from strings import urls
 
 
 def get_tproger_news(driver):
-    URL = "https://tproger.ru/?sort=new"
-    driver.get(URL)
 
     post = driver.find_element(By.CLASS_NAME, "article ")
-    post_id = post.get_attribute("data-post")
 
     title = post.find_element(By.CLASS_NAME, "article__link").text
     description_select = post.find_elements(By.CSS_SELECTOR, "p")
     url = post.find_element(By.CLASS_NAME, "article__link").get_attribute("href")
 
-    description = ""
-    for i in description_select:
-        description += i.text + "\n"
+    description = "\n".join(elem.text for elem in description_select)
 
-    return {"title": title, "description": description, "url": url, "id": post_id}
+    return TelegramPost(title=title, description=description, url=url)
