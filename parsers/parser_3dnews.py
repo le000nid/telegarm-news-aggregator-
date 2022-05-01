@@ -1,8 +1,5 @@
-from selenium.common.exceptions import TimeoutException
 from selenium.webdriver.common.by import By
-
 from models.telegram_post import TelegramPost
-from strings import urls
 
 
 def get_3dnews_news(driver):
