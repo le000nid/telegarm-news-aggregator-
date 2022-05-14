@@ -24,37 +24,14 @@ def start(message):
 
     while True:
 
-        try:
-            driver.get(urls.URL_habr)
-            habr = get_habr_news(driver)
-            if new_news_checker.check_if_new("habr", habr.url):
-                bot.send_message(channel, habr.as_telegram_message())
-        except:  # тут не стал указывать исключения, слишком много всего может выпасть
-            print("habr упал")
-
-        try:
-            driver.get(urls.URL_tproger)
-            tproger = get_tproger_news(driver)
-            if new_news_checker.check_if_new("tproger", tproger.url):
-                bot.send_message(channel, tproger.as_telegram_message())
-        except:
-            print("tproger упал")
-
-        try:
-            driver.get(urls.URL_cnews)
-            cnews = get_cnews_news(driver)
-            if new_news_checker.check_if_new("cnews", cnews.url):
-                bot.send_message(channel, cnews.as_telegram_message())
-        except:
-            print("cnews упал")
-
-        try:
-            driver.get(urls.URL_3dnews)
-            news3d = get_3dnews_news(driver)
-            if new_news_checker.check_if_new("3dnews", news3d.url):
-                bot.send_message(channel, news3d.as_telegram_message())
-        except:
-            print("3dnews упал")
+        for url, resource_parser in zip((urls.URL_habr, urls.URL_3dnews, urls.URL_cnews, urls.URL_tproger), (get_habr_news, get_3dnews_news, get_cnews_news, get_tproger_news)):
+            try:
+                driver.get(url)
+                news = resource_parser(driver)
+                if new_news_checker.check_if_new(url, news.url):
+                    bot.send_message(channel, news.as_telegram_message())
+            except Exception as e:
+                print(f'Что то не так:\n{str(e)}')
 
         time.sleep(30)
 

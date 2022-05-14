@@ -12,6 +12,6 @@ class TelegramPost:
         title = self.title
         description = ""
         if self.description is not None:
-            description = self.description+"\n"
+            description = self.description + "\n"
         url = self.url
         return f"{title}\n\n{description}\n{url}"
